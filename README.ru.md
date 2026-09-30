@@ -59,7 +59,8 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 
 ```powershell
 # Windows (PowerShell): вставьте ключ по запросу, затем полностью перезапустите терминал и MCP-клиент
-[Environment]::SetEnvironmentVariable('JEV_SEARCH_API_KEY', (Read-Host 'Вставьте ключ OpenRouter'), 'User')
+$s = Read-Host 'Вставьте ключ OpenRouter' -AsSecureString
+[Environment]::SetEnvironmentVariable('JEV_SEARCH_API_KEY', [System.Net.NetworkCredential]::new('', $s).Password, 'User')
 ```
 
 ```bash
