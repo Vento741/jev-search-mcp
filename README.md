@@ -96,6 +96,8 @@ uv tool install --force git+https://github.com/Vento741/jev-search-mcp@<new-tag>
 uv tool uninstall jev-search-mcp
 ```
 
+On Windows, close the MCP clients that run the server (Claude Desktop, OpenCode, Claude Code sessions) before updating: a running `jev-search-mcp.exe` locks its files, and the update fails with "Access is denied". If that happens, close the clients and run the same command again.
+
 </details>
 
 ## Connect your client
