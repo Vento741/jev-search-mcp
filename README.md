@@ -222,21 +222,31 @@ The server is named `jev-search` and exposes one read-only tool.
 }
 ```
 
-**Real search output** (`dry_run: false`; measured 2026-09-30, trimmed):
+**Real search** (`dry_run: false`), measured 2026-09-30 through this MCP server; scores vary slightly between runs. Call:
 
-```jsonc
+```json
+{ "query": "greeting", "files": ["/home/me/notes/sample.txt"], "top_k": 3 }
+```
+
+Output (file path synthetic, generation id truncated):
+
+```json
 {
   "mode": "sent",
-  "latency_seconds": 0.69,
+  "latency_seconds": 0.94,
   "results": [
-    { "file": "/home/me/notes/sample.txt", "line": 1, "original": "Hello, nice to meet you.", "probability": 0.82, "match": true },
+    { "file": "/home/me/notes/sample.txt", "line": 1, "original": "Hello, nice to meet you.", "probability": 0.8, "match": true },
     { "file": "/home/me/notes/sample.txt", "line": 2, "original": "The invoice is due Friday.", "probability": 0.04, "match": false }
+  ],
+  "ranked_results": [
+    { "file": "/home/me/notes/sample.txt", "line": 1, "original": "Hello, nice to meet you.", "probability": 0.8, "match": true }
   ],
   "meta": {
     "model": "typesafe/jev-1.13-20260917",
-    "generation_id": "gen-…",
-    "cost": 1.953e-05
-    // plus input_tokens and output_tokens
+    "generation_id": "gen-...",
+    "cost": 1.953e-05,
+    "input_tokens": 465,
+    "output_tokens": 38
   }
 }
 ```

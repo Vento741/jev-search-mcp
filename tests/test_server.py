@@ -40,6 +40,11 @@ class ToolBehaviour(unittest.TestCase):
         self.assertEqual([r["original"] for r in out["rows"]], ["Hello, nice to meet you.", "The invoice is due Friday."])
         self.assertEqual(out["provider"], "openrouter")
 
+    def test_dry_run_accepts_top_k(self):
+        result = call("jev_search", {"query": "greeting", "files": [FIXTURE], "dry_run": True, "top_k": 3})
+        self.assertFalse(result.is_error, result.content[0].text)
+        self.assertEqual(json.loads(result.content[0].text)["mode"], "dry-run")
+
     def test_query_starting_with_dash_is_not_a_flag(self):
         result = call("jev_search", {"query": "-refund", "files": [FIXTURE], "dry_run": True})
         self.assertFalse(result.is_error, result.content[0].text)
@@ -112,6 +117,11 @@ class RunnerDetails(unittest.TestCase):
     def test_timeout_becomes_tool_error(self):
         with mock.patch.object(jev_search_mcp.subprocess, "run", side_effect=subprocess.TimeoutExpired("x", 330)):
             with self.assertRaisesRegex(ToolError, "timed out; not retried"):
+                run_cli(["--dry-run"])
+
+    def test_oserror_becomes_tool_error(self):
+        with mock.patch.object(jev_search_mcp.subprocess, "run", side_effect=OSError("argv too long")):
+            with self.assertRaisesRegex(ToolError, r"invalid input or output \(OSError\)"):
                 run_cli(["--dry-run"])
 
     def test_json_error_is_extracted(self):

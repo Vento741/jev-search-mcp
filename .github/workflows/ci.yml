@@ -1,5 +1,7 @@
 name: ci
 on: [push, pull_request]
+permissions:
+  contents: read
 jobs:
   test:
     strategy:
@@ -13,4 +15,5 @@ jobs:
       - uses: astral-sh/setup-uv@v6
       - run: uv sync --locked --python ${{ matrix.python }}
       - run: uv run python -m unittest discover -s tests -t . -v
+      - run: uv build
       - run: uv run jev-search-mcp --version

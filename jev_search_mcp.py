@@ -68,7 +68,7 @@ def run_cli(args: list[str]) -> dict:
         )
     except subprocess.TimeoutExpired:
         raise ToolError("jev-search timed out; not retried; a charge may have occurred") from None
-    except ValueError as e:  # e.g. NUL byte in an argument
+    except (ValueError, OSError) as e:  # e.g. NUL byte or oversized argv
         raise ToolError(f"jev-search: invalid input or output ({type(e).__name__})") from None
     if proc.returncode != 0:
         raise ToolError(cli_error(proc.stderr))

@@ -70,7 +70,7 @@ Repository: `github.com/Vento741/jev-search-mcp`, **public**, MIT (own copyright
 
 ```
 jev_search_mcp.py      server (single module)
-pyproject.toml         deps: mcp>=2.2,<3 ; jev-search @ git+https://github.com/larguesa/jev-search@8aa403554d7904d3c14224cfda02a4e2144c0ccd
+pyproject.toml         deps: mcp>=2.2,<2.3 ; jev-search @ git+https://github.com/larguesa/jev-search@8aa403554d7904d3c14224cfda02a4e2144c0ccd
                        script: jev-search-mcp = "jev_search_mcp:main"
 README.md              English, custom-designed, short quick start first
 README.ru.md           Russian translation, same structure; language switcher at top of both
@@ -91,7 +91,7 @@ Requirements for users: `uv` and `git` on PATH.
 
 Each user uses their **own** OpenRouter inference key with a provider-side spending limit. How the key reaches the server depends on the client:
 
-- **Claude Code:** inherits its own process environment → user environment variable `JEV_SEARCH_API_KEY` (Windows user env with a full client restart; Linux `~/.bashrc` or a `chmod 600` env file sourced from it — `~/.profile` alone misses non-login shells). Verified live in Task 5.
+- **Claude Code:** inherits its own process environment → user environment variable `JEV_SEARCH_API_KEY` (Windows user env with a full client restart; Linux `~/.bashrc` or a `chmod 600` env file sourced from it — `~/.profile` alone misses non-login shells). Verified before docs were written with a probe stdio server (Claude Code passed its full environment).
 - **Claude Desktop and other SDK-based clients:** pass only a small default set of variables (APPDATA, PATH, USERPROFILE, …) plus the config `env` block → the key **must** go in the `env` block (plaintext in a user-private file; never commit or share it). `JEV_SEARCH_PROVIDER`/`JEV_SEARCH_MODEL` likewise. Never commit keys; never paste them into chats.
 
 ## Documentation

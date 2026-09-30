@@ -222,21 +222,31 @@ uvx --from git+https://github.com/Vento741/jev-search-mcp@v0.1.0 jev-search-mcp
 }
 ```
 
-**Результат настоящего поиска** (`dry_run: false`; замер от 2026-09-30, сокращено):
+**Настоящий поиск** (`dry_run: false`): замер от 2026-09-30 через этот MCP-сервер; оценки немного меняются от запуска к запуску. Вызов:
 
-```jsonc
+```json
+{ "query": "greeting", "files": ["/home/me/notes/sample.txt"], "top_k": 3 }
+```
+
+Результат (путь условный, id генерации сокращён):
+
+```json
 {
   "mode": "sent",
-  "latency_seconds": 0.69,
+  "latency_seconds": 0.94,
   "results": [
-    { "file": "/home/me/notes/sample.txt", "line": 1, "original": "Hello, nice to meet you.", "probability": 0.82, "match": true },
+    { "file": "/home/me/notes/sample.txt", "line": 1, "original": "Hello, nice to meet you.", "probability": 0.8, "match": true },
     { "file": "/home/me/notes/sample.txt", "line": 2, "original": "The invoice is due Friday.", "probability": 0.04, "match": false }
+  ],
+  "ranked_results": [
+    { "file": "/home/me/notes/sample.txt", "line": 1, "original": "Hello, nice to meet you.", "probability": 0.8, "match": true }
   ],
   "meta": {
     "model": "typesafe/jev-1.13-20260917",
-    "generation_id": "gen-…",
-    "cost": 1.953e-05
-    // а также input_tokens и output_tokens
+    "generation_id": "gen-...",
+    "cost": 1.953e-05,
+    "input_tokens": 465,
+    "output_tokens": 38
   }
 }
 ```
@@ -255,7 +265,7 @@ uvx --from git+https://github.com/Vento741/jev-search-mcp@v0.1.0 jev-search-mcp
 | Длина строки | ≤ 2 КБ (2 048 байт) |
 | Запрос | ≤ 512 байт |
 | Запросы к API | ровно один за вызов, **без повторов** |
-| Тайм-аут | 330 с на вызов; его задаёт эта обёртка для подпроцесса CLI (собственный сетевой тайм-аут CLI — 300 с) |
+| Таймаут | 330 с на вызов; его задаёт эта обёртка для подпроцесса CLI (собственный сетевой таймаут CLI — 300 с) |
 
 Если файл больше, ищите по просмотренному фрагменту. Кроме того, CLI отклоняет символические ссылки, пути, в которых какая-либо часть начинается с `.` или содержит `secret`, `credential`, `password` или `id_rsa`, а также текст, похожий на ключ или пароль.
 
@@ -266,7 +276,7 @@ uvx --from git+https://github.com/Vento741/jev-search-mcp@v0.1.0 jev-search-mcp
 
 - **Настоящий поиск платный.** Поиск по двум строкам стоил около **$0.00002** (замер от 2026-09-30, цены меняются). Стоимость растёт с числом строк.
 - **Используйте собственный ключ с лимитом расходов**, заданным в кабинете провайдера. Никому его не передавайте.
-- **Если `cost` не указан, это не значит, что поиск был бесплатным.** Даже при тайм-ауте или сбое сети списание могло пройти. Повторных запросов не бывает.
+- **Если `cost` не указан, это не значит, что поиск был бесплатным.** Даже при таймауте или сбое сети списание могло пройти. Повторных запросов не бывает.
 - `dry_run` всегда бесплатен и не обращается к сети.
 
 ## Документация

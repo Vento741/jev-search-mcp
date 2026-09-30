@@ -1,5 +1,7 @@
 # jev-search-mcp Implementation Plan
 
+> Historical execution plan kept for transparency; README.md, README.ru.md and docs/GUIDE.md are authoritative.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Ship a public, installable stdio MCP server that exposes the pinned `jev-search` CLI as one tool, with bilingual README and a detailed Russian guide.
@@ -18,7 +20,7 @@
 - Must work on Windows and Linux.
 - Never pass the key in argv, never print it, never include it in output or errors. Tests must never make a paid call: every test removes `JEV_SEARCH_API_KEY` from the environment it runs the CLI in (the dev machine HAS a real key set).
 - Tool name `jev_search`; server name `jev-search`; console script `jev-search-mcp`.
-- Commit identity: `git -c user.name=Vento741 -c user.email=vento741@mail.ru commit ...`; every commit message ends with a blank line and `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
+- Commit as the repository owner; every commit message ends with a blank line and `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
 - Dev commands (uv is invoked as `python -m uv` on this machine): `python -m uv sync` then `python -m uv run python -m unittest discover -s tests -v`. Commit `uv.lock`.
 - The CLI is always spawned as `[sys.executable, "-I", "-m", "jev_search", ...]` (`-I` prevents a `jev_search.py` in the working directory from shadowing the pinned CLI - reproduced by review).
 - `files` must be absolute paths; the tool rejects relative ones before spawning.
@@ -530,7 +532,7 @@ Requirements (both files identical in structure; RU is a natural translation, no
 - [ ] **Step 2: Sections in order**
   1. *What it is* — 3 bullets: complementary semantic line search; runs locally next to your files (stdio); every client that speaks MCP.
   2. *How it works* — a Mermaid `flowchart LR`: Agent → (stdio) jev-search-mcp → jev-search CLI → (HTTPS) OpenRouter → TypeSafe Jev model.
-  3. **Quick start** (must fit one messenger message): (1) install uv — Windows `powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"`, Linux/macOS `curl -LsSf https://astral.sh/uv/install.sh | sh`; (2) create your own OpenRouter key with a spending limit at https://openrouter.ai/settings/keys and set `JEV_SEARCH_API_KEY` (Windows: `[Environment]::SetEnvironmentVariable('JEV_SEARCH_API_KEY', '<key>', 'User')` then fully restart the client; Linux/VPS: add `export JEV_SEARCH_API_KEY=...` to `~/.bashrc` - `~/.profile` alone misses non-login shells); (3) install `uv tool install git+https://github.com/Vento741/jev-search-mcp@v0.1.0` and connect. Put a *Requirements: uv + git* line above the steps.
+  3. **Quick start** (must fit one messenger message): (1) install uv — Windows `powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"`, Linux/macOS `curl -LsSf https://astral.sh/uv/install.sh | sh`; (2) create your own OpenRouter key with a spending limit at https://openrouter.ai/settings/keys and set `JEV_SEARCH_API_KEY` (Windows: see README Quick start (hidden prompt), then fully restart the client; Linux/VPS: add `export JEV_SEARCH_API_KEY=...` to `~/.bashrc` - `~/.profile` alone misses non-login shells); (3) install `uv tool install git+https://github.com/Vento741/jev-search-mcp@v0.1.0` and connect. Put a *Requirements: uv + git* line above the steps.
   4. *Connect your client* - Claude Code: `claude mcp add --scope user jev-search -- jev-search-mcp` (inherits the key from its environment). Claude Desktop: JSON for `claude_desktop_config.json` (`%APPDATA%\Claude\` on Windows, `~/Library/Application Support/Claude/` on macOS) with `"command": "<full path to jev-search-mcp(.exe)>"` (find it with `where jev-search-mcp` / `which jev-search-mcp`) and **`"env": {"JEV_SEARCH_API_KEY": "<your key>"}`** - Desktop does not pass user environment variables; warn that the key is plaintext in that user-private file, never commit or share it. Any MCP client: generic stdio JSON, same `env` rule. Zero-install alternative: `uvx --from git+https://github.com/Vento741/jev-search-mcp@v0.1.0 jev-search-mcp` (slower start, may contact GitHub on each start).
   5. *Tool* — table of `query`, `files`, `top_k`, `dry_run` with rules; example call and trimmed example output (dry-run JSON shape and sent JSON shape with `results` + `meta`).
   6. *Limits* — 1–8 files, extensions, 16 KB/64 lines combined, 2 KB per line, 512-byte query, one request per call, no retries.
@@ -551,7 +553,7 @@ Requirements (both files identical in structure; RU is a natural translation, no
   2. Как устроено и что уходит провайдеру; стоимость.
   3. Требования: `uv` и `git`. Установка: Windows / Linux / VPS (без sudo, uv в `~/.local/bin`); основной путь `uv tool install git+https://github.com/Vento741/jev-search-mcp@v0.1.0`, `uvx` - альтернатива (медленнее старт, может ходить в GitHub при каждом запуске); обновление (`uv tool install --force ...@<новый тег>`), закрепление версии тегом; удаление (`uv tool uninstall jev-search-mcp`).
   4. Ключ: создание в OpenRouter с лимитом расходов. Кто как получает ключ: **Claude Code** наследует окружение - Windows: пользовательская переменная + **полный** перезапуск клиента (главный процесс VS Code, не Reload Window); Linux/VPS: `~/.bashrc` или файл `~/.config/jev-search.env` с `chmod 600`, подключаемый из `~/.bashrc` через `set -a; . ~/.config/jev-search.env; set +a` (`~/.profile` не читается не-login оболочками). **Claude Desktop и другие клиенты на MCP SDK НЕ передают пользовательские переменные** - ключ обязательно в блоке `env` конфига (открытым текстом в личном файле, не коммитить и не пересылать). Свои ключи коллегам не передавать - у каждого свой.
-  5. Подключение: Claude Code (user scope vs проектный `.mcp.json` с `"env": {"JEV_SEARCH_API_KEY": "${JEV_SEARCH_API_KEY}"}`), проверка `claude mcp list`; Claude Desktop (пути конфига Windows/macOS, перезапуск); Claude Agent SDK на Python (`ClaudeAgentOptions(mcp_servers={...}, allowed_tools=["mcp__jev-search__jev_search"])` — verify against current Agent SDK docs via context7 before writing); любой MCP-клиент/оркестратор (общий stdio JSON); провайдер TypeSafe через `env` `JEV_SEARCH_PROVIDER=typesafe`.
+  5. Подключение: Claude Code (user scope vs проектный `.mcp.json` без блока `env`: ключ берётся из окружения Claude Code каждого участника, как в GUIDE), проверка `claude mcp list`; Claude Desktop (пути конфига Windows/macOS, перезапуск); Claude Agent SDK на Python (`ClaudeAgentOptions(mcp_servers={...}, allowed_tools=["mcp__jev-search__jev_search"])` — verify against current Agent SDK docs via context7 before writing); любой MCP-клиент/оркестратор (общий stdio JSON); провайдер TypeSafe через `env` `JEV_SEARCH_PROVIDER=typesafe`.
   6. **Сценарии** (каждый: задача → как выбрать файлы → пример запроса агенту → что ожидать): документация и ADR проекта; заметки Obsidian/second brain; разбор логов на VPS (выборка `tail -n 60` во временный `.log`); тикеты поддержки в CSV; связка grep + смысл (поиск синонимичных формулировок, которых нет в ключевых словах); большой файл → нарезка на проверенные фрагменты с сохранением номеров строк; `dry_run` для проверки перед отправкой конфиденциального.
   7. Готовый блок для `CLAUDE.md`/`AGENTS.md` проекта (5–8 строк правил использования).
   8. Ограничения и справочник ошибок (таблица: текст ошибки CLI → причина → что делать: `disallowed filename`, `symlink rejected`, `total byte limit 16384 exceeded`, `line limit exceeded`, `possible secret rejected`, `set JEV_SEARCH_API_KEY...`, `HTTP 401/402/429; not retried`, `timed out`).
@@ -567,10 +569,9 @@ Requirements (both files identical in structure; RU is a natural translation, no
 - [ ] Commit `uv.lock` before pushing.
 - [ ] `git remote add origin https://github.com/Vento741/jev-search-mcp.git && git push -u origin main`; verify remote HEAD equals local; wait for CI green on all 4 jobs; then tag `v0.1.0` and push the tag.
 - [ ] `python -m uv tool install git+https://github.com/Vento741/jev-search-mcp@v0.1.0` -> `jev-search-mcp --version` prints `0.1.0`.
-- [ ] Register for this user's Claude Code: `claude mcp add --scope user jev-search -- "C:\Users\Bear Soul\.local\bin\jev-search-mcp.exe"`; `claude mcp list` shows it connected.
-- [ ] If `%APPDATA%\Claude\claude_desktop_config.json` exists: back it up, add the `jev-search` entry (full path to `jev-search-mcp.exe`, `env.JEV_SEARCH_API_KEY` copied from the user env var without printing it), keep all other entries; tell the user to fully restart Claude Desktop.
+- [ ] Register in Claude Code: `claude mcp add --scope user jev-search -- jev-search-mcp`; `claude mcp list` shows it connected.
+- [ ] Optionally register in Claude Desktop per README.
 - [ ] One live smoke search through a real stdio MCP client against the installed executable on the synthetic fixture (budget authorized, ≈$0.00002); report result and cost.
-- [ ] Update memory file `jev-search-setup.md` with the MCP facts.
 
 ---
 
