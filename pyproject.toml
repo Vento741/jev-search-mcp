@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "jev-search-mcp"
+version = "0.1.0"
+description = "MCP server for jev-search: complementary semantic line search for AI agents"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{name = "Vento741"}]
+dependencies = [
+  "mcp>=2.2,<2.3",
+  "jev-search @ git+https://github.com/larguesa/jev-search@8aa403554d7904d3c14224cfda02a4e2144c0ccd",
+]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Operating System :: POSIX :: Linux",
+  "Operating System :: Microsoft :: Windows",
+  "Programming Language :: Python :: 3",
+]
+
+[project.scripts]
+jev-search-mcp = "jev_search_mcp:main"
+
+[project.urls]
+Repository = "https://github.com/Vento741/jev-search-mcp"
+Upstream = "https://github.com/larguesa/jev-search"
+
+[tool.setuptools]
+py-modules = ["jev_search_mcp"]
