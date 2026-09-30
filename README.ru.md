@@ -20,7 +20,7 @@
 
 - **Дополнительный смысловой поиск по строкам.** Модель TypeSafe Jev оценивает каждую непустую строку нескольких небольших текстовых файлов: выражает ли она ваше намерение. Этот поиск дополняет обычный, но не заменяет его.
 - **Работает локально, рядом с вашими файлами.** Сервер — это локальный процесс, который клиент запускает через stdio. Не нужно открывать порты и ничего разворачивать; удалённо выполняется только сам вызов модели.
-- **Подходит для любого клиента с поддержкой MCP**: Claude Code, Claude Desktop и других stdio-клиентов.
+- **Подходит для любого клиента с поддержкой MCP**: Claude Code, Claude Desktop, OpenCode и других stdio-клиентов.
 
 ## Как это работает
 
@@ -74,10 +74,12 @@ echo "export JEV_SEARCH_API_KEY='$K'" >> ~/.bashrc; unset K; chmod 600 ~/.bashrc
 **3. Установите сервер и подключите его** (в примере — Claude Code; про другие клиенты рассказано [ниже](#подключение-клиента)).
 
 ```bash
-uv tool install git+https://github.com/Vento741/jev-search-mcp@v0.1.0
-jev-search-mcp --version   # выведет 0.1.0
+uv tool install git+https://github.com/Vento741/jev-search-mcp@v0.1.1
+jev-search-mcp --version   # выведет 0.1.1
 claude mcp add --scope user jev-search -- jev-search-mcp
 ```
+
+Работаете в OpenCode? Выполните `opencode mcp add --global jev-search -- jev-search-mcp`, затем `opencode reload` (подробнее — в разделе [OpenCode](#opencode)).
 
 Чтобы бесплатно проверить настройку, попросите агента: *«Запусти jev_search с dry_run для файла /home/me/notes/sample.txt и запроса „приветствие“»*. Укажите абсолютный путь к любому своему файлу, например `C:\Users\you\notes\sample.txt` в Windows.
 
@@ -150,6 +152,36 @@ CI проверяет только Windows и Linux. На macOS всё долж�
 > [!WARNING]
 > В этом файле ключ хранится **открытым текстом**. Файл лежит в вашем профиле, поэтому держите его закрытым: не коммитьте, не синхронизируйте и никому не передавайте.
 
+### OpenCode
+
+```bash
+opencode mcp add --global jev-search -- jev-search-mcp
+opencode reload      # приложение OpenCode держит фоновый сервис, который кэширует конфиг
+opencode mcp list    # ожидается: jev-search  connected
+```
+
+OpenCode передаёт локальным серверам ваше окружение, поэтому пользовательской переменной из шага 2 достаточно (проверено на OpenCode 2.0 в Windows). С `--global` запись попадает в `~/.config/opencode/opencode.jsonc`, и сервер доступен во всех проектах; без флага — в `opencode.json` текущего проекта. Если ключ задан после запуска OpenCode, перезапустите фоновый сервис командой `opencode service restart` (или полностью закройте и откройте приложение).
+
+<details>
+<summary><b>Итоговый конфиг OpenCode</b></summary>
+
+```json
+{
+  "mcp": {
+    "servers": {
+      "jev-search": {
+        "type": "local",
+        "command": ["jev-search-mcp"]
+      }
+    }
+  }
+}
+```
+
+Если OpenCode запускается службой, у которой нет ваших переменных, добавьте в запись сервера `"environment": { "JEV_SEARCH_API_KEY": "<ваш-ключ>" }` (открытым текстом, с тем же предупреждением, что и для Claude Desktop). Не передавайте ключ через `opencode mcp add --env`: он останется в истории команд.
+
+</details>
+
 ### Другие MCP-клиенты
 
 Используйте стандартную конфигурацию stdio. Правило то же: если в документации клиента не сказано, что он передаёт всё ваше окружение, укажите ключ в `env`.
@@ -169,10 +201,10 @@ CI проверяет только Windows и Linux. На macOS всё долж�
 **Вариант без установки.** Чтобы обойтись без `uv tool install`, укажите в качестве команды `uvx`. Сервер будет запускаться медленнее и при каждом запуске может обращаться к GitHub.
 
 ```bash
-uvx --from git+https://github.com/Vento741/jev-search-mcp@v0.1.0 jev-search-mcp
+uvx --from git+https://github.com/Vento741/jev-search-mcp@v0.1.1 jev-search-mcp
 ```
 
-В JSON это `"command": "uvx"` и `"args": ["--from", "git+https://github.com/Vento741/jev-search-mcp@v0.1.0", "jev-search-mcp"]`. В Claude Code: `claude mcp add --scope user jev-search -- uvx --from git+https://github.com/Vento741/jev-search-mcp@v0.1.0 jev-search-mcp`.
+В JSON это `"command": "uvx"` и `"args": ["--from", "git+https://github.com/Vento741/jev-search-mcp@v0.1.1", "jev-search-mcp"]`. В Claude Code: `claude mcp add --scope user jev-search -- uvx --from git+https://github.com/Vento741/jev-search-mcp@v0.1.1 jev-search-mcp`.
 
 <details>
 <summary><b>Дополнительно: TypeSafe напрямую или другая модель</b></summary>

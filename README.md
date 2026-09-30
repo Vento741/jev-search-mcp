@@ -20,7 +20,7 @@ This is a small stdio MCP server that gives any MCP-capable agent the [jev-searc
 
 - **Complementary semantic line search.** Every nonblank line of a few small text files is judged against your intent by the TypeSafe Jev model. It adds to lexical search; it does not replace it.
 - **Runs locally, next to your files.** The server is a local process that your client starts over stdio. There is no port to open and nothing to host; only the model call itself is remote.
-- **Works with every client that speaks MCP.** Claude Code, Claude Desktop, or any other stdio MCP client.
+- **Works with every client that speaks MCP.** Claude Code, Claude Desktop, OpenCode, or any other stdio MCP client.
 
 ## How it works
 
@@ -74,10 +74,12 @@ Use `~/.bashrc`, because `~/.profile` alone misses non-login shells. This covers
 **3. Install and connect** (the example uses Claude Code; other clients are covered [below](#connect-your-client)).
 
 ```bash
-uv tool install git+https://github.com/Vento741/jev-search-mcp@v0.1.0
-jev-search-mcp --version   # prints 0.1.0
+uv tool install git+https://github.com/Vento741/jev-search-mcp@v0.1.1
+jev-search-mcp --version   # prints 0.1.1
 claude mcp add --scope user jev-search -- jev-search-mcp
 ```
+
+Using OpenCode instead? Run `opencode mcp add --global jev-search -- jev-search-mcp` and then `opencode reload` (see [OpenCode](#opencode)).
 
 To check the setup for free, ask your agent: *"Run jev_search with dry_run on /home/me/notes/sample.txt for 'greeting'"* (use the absolute path of one of your own files, e.g. `C:\Users\you\notes\sample.txt` on Windows).
 
@@ -150,6 +152,36 @@ CI covers only Windows and Linux; macOS is expected to work but is not tested.
 > [!WARNING]
 > In this file the key is stored as **plain text**. It lives in your user profile, so keep it private: never commit, sync, or share it.
 
+### OpenCode
+
+```bash
+opencode mcp add --global jev-search -- jev-search-mcp
+opencode reload      # the OpenCode app runs a background service that caches its config
+opencode mcp list    # expect: jev-search  connected
+```
+
+OpenCode passes your environment to local servers, so the user variable from step 2 is enough (checked with OpenCode 2.0 on Windows). `--global` writes to `~/.config/opencode/opencode.jsonc` and makes the server available in all projects; without it the server goes into the current project's `opencode.json`. If you set the key after OpenCode started, restart its background service with `opencode service restart` (or fully quit and reopen the app).
+
+<details>
+<summary><b>Resulting OpenCode config</b></summary>
+
+```json
+{
+  "mcp": {
+    "servers": {
+      "jev-search": {
+        "type": "local",
+        "command": ["jev-search-mcp"]
+      }
+    }
+  }
+}
+```
+
+If OpenCode is started by a service that does not have your variables, add `"environment": { "JEV_SEARCH_API_KEY": "<your-key>" }` to the server entry (plaintext, same warning as for Claude Desktop). Do not pass the key with `opencode mcp add --env`: it would end up in your shell history.
+
+</details>
+
 ### Any other MCP client
 
 Use the generic stdio configuration. The same rule applies: unless your client is documented to pass on your full environment, put the key in `env`.
@@ -169,10 +201,10 @@ Use the generic stdio configuration. The same rule applies: unless your client i
 **Zero-install alternative.** To run without `uv tool install`, use `uvx` as the command. It starts more slowly and may contact GitHub each time it starts.
 
 ```bash
-uvx --from git+https://github.com/Vento741/jev-search-mcp@v0.1.0 jev-search-mcp
+uvx --from git+https://github.com/Vento741/jev-search-mcp@v0.1.1 jev-search-mcp
 ```
 
-In JSON this is `"command": "uvx"` with `"args": ["--from", "git+https://github.com/Vento741/jev-search-mcp@v0.1.0", "jev-search-mcp"]`. In Claude Code, use `claude mcp add --scope user jev-search -- uvx --from git+https://github.com/Vento741/jev-search-mcp@v0.1.0 jev-search-mcp`.
+In JSON this is `"command": "uvx"` with `"args": ["--from", "git+https://github.com/Vento741/jev-search-mcp@v0.1.1", "jev-search-mcp"]`. In Claude Code, use `claude mcp add --scope user jev-search -- uvx --from git+https://github.com/Vento741/jev-search-mcp@v0.1.1 jev-search-mcp`.
 
 <details>
 <summary><b>Optional: TypeSafe directly or another model</b></summary>

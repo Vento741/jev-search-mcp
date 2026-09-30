@@ -265,7 +265,7 @@ source = { git = "https://github.com/larguesa/jev-search?rev=8aa403554d7904d3c14
 
 [[package]]
 name = "jev-search-mcp"
-version = "0.1.0"
+version = "0.1.1"
 source = { editable = "." }
 dependencies = [
     { name = "jev-search" },

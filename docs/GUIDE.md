@@ -95,13 +95,13 @@ uv --version
 Основной способ: установить сервер как инструмент uv с закреплённым тегом релиза.
 
 ```bash
-uv tool install git+https://github.com/Vento741/jev-search-mcp@v0.1.0
-jev-search-mcp --version   # выведет 0.1.0
+uv tool install git+https://github.com/Vento741/jev-search-mcp@v0.1.1
+jev-search-mcp --version   # выведет 0.1.1
 ```
 
 Исполняемый файл окажется в `~/.local/bin` (Windows: `C:\Users\you\.local\bin\jev-search-mcp.exe`). Если оболочка его не находит, выполните `uv tool update-shell` и откройте новый терминал.
 
-Тег в конце адреса (`@v0.1.0`) закрепляет версию: пока вы его не поменяете, у всех коллег одинаковый код, а версия CLI `jev-search` закреплена внутри пакета на конкретном коммите. Учтите: `uv tool install git+…@тег` не использует `uv.lock` из репозитория, поэтому закреплены только `mcp<2.3` и коммит CLI, а транзитивные зависимости могут обновляться.
+Тег в конце адреса (`@v0.1.1`) закрепляет версию: пока вы его не поменяете, у всех коллег одинаковый код, а версия CLI `jev-search` закреплена внутри пакета на конкретном коммите. Учтите: `uv tool install git+…@тег` не использует `uv.lock` из репозитория, поэтому закреплены только `mcp<2.3` и коммит CLI, а транзитивные зависимости могут обновляться.
 
 <details>
 <summary><b>Альтернатива: запуск через <code>uvx</code> без установки</b></summary>
@@ -109,13 +109,13 @@ jev-search-mcp --version   # выведет 0.1.0
 Клиент может запускать сервер командой:
 
 ```bash
-uvx --from git+https://github.com/Vento741/jev-search-mcp@v0.1.0 jev-search-mcp
+uvx --from git+https://github.com/Vento741/jev-search-mcp@v0.1.1 jev-search-mcp
 ```
 
 Минусы: старт медленнее, при каждом запуске uv может обращаться к GitHub, а первый запуск скачивает зависимости и может не уложиться в таймаут подключения клиента. Прогрейте кэш заранее той же командой с `--version`:
 
 ```bash
-uvx --from git+https://github.com/Vento741/jev-search-mcp@v0.1.0 jev-search-mcp --version
+uvx --from git+https://github.com/Vento741/jev-search-mcp@v0.1.1 jev-search-mcp --version
 ```
 
 </details>
@@ -151,6 +151,7 @@ uv tool uninstall jev-search-mcp
 | Клиент | Передаёт ваши переменные окружения? | Где хранить ключ |
 |---|---|---|
 | Claude Code (терминал, расширения VS Code и JetBrains) | **да**, всё своё окружение | пользовательская переменная `JEV_SEARCH_API_KEY` |
+| OpenCode (CLI и приложение) | **да**, фоновый сервис передаёт своё окружение | пользовательская переменная `JEV_SEARCH_API_KEY`; после её изменения — `opencode service restart` |
 | Claude Agent SDK | передавайте явно | `env` в конфиге сервера из `os.environ` ([пример](#claude-agent-sdk-python)) |
 | Claude Desktop | **нет**, только небольшой стандартный набор (`PATH`, `APPDATA`, `USERPROFILE` и т. п.) | блок `env` в `claude_desktop_config.json` |
 | Другие клиенты на MCP SDK | обычно **нет**, как Claude Desktop | блок `env` в конфиге клиента |
@@ -276,6 +277,19 @@ claude mcp add --scope project jev-search -- jev-search-mcp
 
 Вписывайте ключ, открыв файл в редакторе, и никому не отправляйте файл целиком.
 
+### OpenCode
+
+```bash
+opencode mcp add --global jev-search -- jev-search-mcp
+opencode reload
+opencode mcp list    # jev-search  connected
+```
+
+- `--global` пишет в `~/.config/opencode/opencode.jsonc` — сервер доступен во всех проектах. Без флага запись попадает в `opencode.json` текущего проекта; такой файл можно коммитить, ключа в нём нет.
+- Приложение OpenCode запускает фоновый сервис (`opencode-cli serve --service`), и `opencode mcp list` показывает его состояние. Сервис кэширует конфиг: после любой правки выполните `opencode reload`, иначе список покажет старую картину.
+- Ключ сервер получает из окружения этого сервиса (проверено на OpenCode 2.0 в Windows). Если переменную задали после запуска OpenCode, выполните `opencode service restart` или полностью закройте и откройте приложение.
+- Запасной вариант для запуска без ваших переменных (служба, контейнер): поле `"environment": { "JEV_SEARCH_API_KEY": "<ваш-ключ>" }` в записи сервера — открытым текстом, правила те же, что для Claude Desktop. Вписывайте ключ в редакторе, а не через `opencode mcp add --env`: иначе он останется в истории команд.
+
 ### Claude Agent SDK (Python)
 
 Сверено с [документацией Agent SDK по MCP](https://code.claude.com/docs/en/agent-sdk/mcp) на 2026-09-30. SDK ставится отдельно (`pip install claude-agent-sdk`) и требует **собственной** аутентификации Claude; это не ключ jev-search.
@@ -334,7 +348,7 @@ asyncio.run(main())
 }
 ```
 
-С `uvx`: `"command": "uvx"`, `"args": ["--from", "git+https://github.com/Vento741/jev-search-mcp@v0.1.0", "jev-search-mcp"]`.
+С `uvx`: `"command": "uvx"`, `"args": ["--from", "git+https://github.com/Vento741/jev-search-mcp@v0.1.1", "jev-search-mcp"]`.
 
 Сервер не открывает портов, не пишет в файлы и работает, пока клиент держит его stdin/stdout. Одного экземпляра на сессию агента достаточно. Проверить сервер без агента можно в [MCP Inspector](https://github.com/modelcontextprotocol/inspector): `npx @modelcontextprotocol/inspector jev-search-mcp` (нужен Node.js).
 
@@ -578,6 +592,7 @@ Get-Content -Encoding UTF8 C:\Users\you\docs\handbook.md |
 
 - **Claude Code, Windows:** переменная задана после запуска клиента. Закройте **все** окна VS Code (не *Reload Window*), все терминалы и сессии Claude Code, откройте заново. Проверьте переменную командой из [раздела 4](#claude-code-на-windows).
 - **Claude Code, Linux/VPS:** Claude Code запущен из оболочки, которая не прочитала `~/.bashrc` (старое окно `tmux`, `nohup`, cron, systemd). Перезапустите из новой интерактивной оболочки или задайте ключ в конфигурации службы.
+- **OpenCode:** фоновый сервис запущен до того, как появилась переменная. Выполните `opencode service restart` (или полностью перезапустите приложение), затем `opencode reload`.
 - **Claude Desktop и другие клиенты:** ключ должен быть в блоке `env` конфига; пользовательские переменные они не передают. После правки — полный перезапуск клиента.
 - **Проектный `.mcp.json`:** ключа в файле нет; сервер получает его из окружения Claude Code того, кто работает с проектом. Каждый участник задаёт `JEV_SEARCH_API_KEY` у себя, как в [разделе 4](#4-ключ-api).
 
@@ -593,7 +608,7 @@ Get-Content -Encoding UTF8 C:\Users\you\docs\handbook.md |
 При варианте с `uvx` первый старт скачивает зависимости и может превысить таймаут подключения (в Claude Code по умолчанию 30 с). Прогрейте кэш:
 
 ```bash
-uvx --from git+https://github.com/Vento741/jev-search-mcp@v0.1.0 jev-search-mcp --version
+uvx --from git+https://github.com/Vento741/jev-search-mcp@v0.1.1 jev-search-mcp --version
 ```
 
 Для Claude Code таймаут подключения можно увеличить переменной `MCP_TIMEOUT` (в миллисекундах), заданной перед запуском `claude`: `MCP_TIMEOUT=60000 claude` в bash или `$env:MCP_TIMEOUT=60000; claude` в PowerShell. Надёжнее перейти на `uv tool install`.
