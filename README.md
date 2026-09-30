@@ -19,7 +19,7 @@ This is a small stdio MCP server that gives any MCP-capable agent the [jev-searc
 ## What it is
 
 - **Complementary semantic line search.** Every nonblank line of a few small text files is judged against your intent by the TypeSafe Jev model. It adds to lexical search; it does not replace it.
-- **Runs locally, next to your files.** The server is a local process that your client starts over stdio. There is no port to open and nothing to host.
+- **Runs locally, next to your files.** The server is a local process that your client starts over stdio. There is no port to open and nothing to host; only the model call itself is remote.
 - **Works with every client that speaks MCP.** Claude Code, Claude Desktop, or any other stdio MCP client.
 
 ## How it works
@@ -58,14 +58,17 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 **2. Set your key.** Create your **own** OpenRouter key with a spending limit at <https://openrouter.ai/settings/keys> and store it as `JEV_SEARCH_API_KEY`.
 
 ```powershell
-# Windows (PowerShell). Afterwards, fully restart your terminal and MCP client.
-[Environment]::SetEnvironmentVariable('JEV_SEARCH_API_KEY', '<your-key>', 'User')
+# Windows (PowerShell): paste the key when asked, then fully restart your terminal and MCP client
+[Environment]::SetEnvironmentVariable('JEV_SEARCH_API_KEY', (Read-Host 'Paste your OpenRouter key'), 'User')
 ```
 
 ```bash
-# Linux / VPS: use ~/.bashrc, because ~/.profile alone misses non-login shells
-echo 'export JEV_SEARCH_API_KEY=<your-key>' >> ~/.bashrc && source ~/.bashrc
+# Linux / VPS (bash): paste the key when asked; it is not shown and stays out of shell history
+read -rsp 'Paste your OpenRouter key: ' K; echo
+echo "export JEV_SEARCH_API_KEY='$K'" >> ~/.bashrc; unset K; chmod 600 ~/.bashrc; source ~/.bashrc
 ```
+
+Use `~/.bashrc`, because `~/.profile` alone misses non-login shells. This covers interactive shells only; for services or non-interactive launches, put the key in the client's `env` block. On macOS (zsh), run the same lines with `read -rs 'K?Paste your OpenRouter key: '` and `~/.zshrc`.
 
 **3. Install and connect** (the example uses Claude Code; other clients are covered [below](#connect-your-client)).
 
@@ -75,7 +78,7 @@ jev-search-mcp --version   # prints 0.1.0
 claude mcp add --scope user jev-search -- jev-search-mcp
 ```
 
-To check the setup for free, ask your agent: *"Run jev_search with dry_run on /home/me/notes/sample.txt for 'greeting'"* (use the absolute path of one of your own files).
+To check the setup for free, ask your agent: *"Run jev_search with dry_run on /home/me/notes/sample.txt for 'greeting'"* (use the absolute path of one of your own files, e.g. `C:\Users\you\notes\sample.txt` on Windows).
 
 > [!TIP]
 > If the shell reports that `jev-search-mcp` is not found, run `uv tool update-shell` and open a new terminal.
@@ -108,7 +111,7 @@ Claude Code passes its whole environment to stdio servers, so the user variable 
 
 Claude Desktop passes only a small default set of variables (such as `PATH` and `APPDATA`) to servers, **not** your user variables. The key must therefore go into the config's `env` block, and `command` must be the full path to the executable.
 
-1. Find the path: `where jev-search-mcp` (Windows) or `which jev-search-mcp` (macOS).
+1. Find the path: `where.exe jev-search-mcp` (Windows) or `which jev-search-mcp` (macOS/Linux).
 2. Open the config file. You can use *Settings → Developer → Edit Config*, or open it directly at `%APPDATA%\Claude\claude_desktop_config.json` (Windows).
 3. Add the server (merge it into `mcpServers` if the file already has one), then fully quit and reopen Claude Desktop.
 
@@ -250,9 +253,10 @@ These limits come from the upstream CLI, which deliberately works on small, revi
 | Combined size | ≤ 16 KB (16,384 bytes) **and** ≤ 64 lines across all files |
 | Line length | ≤ 2 KB (2,048 bytes) per line |
 | Query | ≤ 512 bytes |
-| Requests | exactly one per call, **no retries**, 330 s timeout |
+| Requests | exactly one per call, **no retries** |
+| Timeout | 330 s per call, set by this wrapper around the CLI subprocess (the CLI's own network timeout is 300 s) |
 
-For a bigger file, search a reviewed excerpt of it instead. The CLI also rejects symlinks, paths containing a hidden (`.`-prefixed) folder, filenames that mention `secret`, `credential`, `password` or `id_rsa`, and text that looks like a key or password.
+For a bigger file, search a reviewed excerpt of it instead. The CLI also rejects symlinks, paths where any component starts with `.` or contains `secret`, `credential`, `password` or `id_rsa`, and text that looks like a key or password.
 
 ## Privacy & cost
 
